@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import API from '../services/api';
+import { loginWithFirebase } from '../services/api';
 
 const Login = () => {
     const [formData, setFormData] = useState({ email: '', password: '' });
@@ -13,14 +13,14 @@ const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const res = await API.post('/auth/login', formData);
-            localStorage.setItem('token', res.data.token);
-            localStorage.setItem('role', res.data.role);
+            const res = await loginWithFirebase(formData.email, formData.password);
+            localStorage.setItem('token', res.token);
+            localStorage.setItem('role', res.role);
             alert('Login successful!');
-            if (res.data.role === 'admin') navigate('/admin/jobs');
+            if (res.role === 'admin') navigate('/admin/jobs');
             else navigate('/candidate/jobs');
         } catch (error) {
-            alert('Error: ' + error.response.data.message);
+            alert('Error: ' + error.message);
         }
     };
 

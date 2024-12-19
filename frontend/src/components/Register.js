@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import API from '../services/api';
+import { registerWithFirebase } from '../services/api';
 
 const Register = () => {
-    const [formData, setFormData] = useState({
-        name: '', email: '', password: '', role: ''
-    });
+    const [formData, setFormData] = useState({ name: '', email: '', password: '', role: '' });
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -15,11 +13,11 @@ const Register = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await API.post('/auth/register', formData);
+            await registerWithFirebase(formData.email, formData.password, formData.role);
             alert('Registration successful!');
             navigate('/login');
         } catch (error) {
-            alert('Error: ' + error.response.data.message);
+            alert('Error: ' + error.message);
         }
     };
 

@@ -3,8 +3,8 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Home from './components/Home';
 import Register from './components/Register';
 import Login from './components/Login';
-import CandidateJobs from './components/CandidateJobs';
-import AdminJobs from './components/AdminJobs';
+import AddJobForm from './components/Admin/AddJobForm';
+import CandidateJobs from './components/Candidate/CandidateJobs';
 
 function App() {
     return (
@@ -14,7 +14,7 @@ function App() {
                 <Route path="/register" element={<Register />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/candidate/jobs" element={<CandidateJobs />} />
-                <Route path="/admin/jobs" element={<AdminJobs />} />
+                <Route path="/admin/add-job" element={<AddJobForm />} />
             </Routes>
         </BrowserRouter>
     );
