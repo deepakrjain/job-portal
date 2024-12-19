@@ -1,77 +1,50 @@
+// components/Login.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'; // Import getAuth and signInWithEmailAndPassword
-import api from '../utils/api'; // Import the API utility
-import app from '../utils/firebaseConfig'; // Import Firebase app (if required for initialization)
+import axios from 'axios';
 
 const Login = () => {
-    const [formData, setFormData] = useState({ email: '', password: '' });
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const navigate = useNavigate();
-
-    const handleInputChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
+    const history = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const auth = getAuth(); // Correct usage of getAuth
-
         try {
-            // Firebase Authentication
-            const userCredential = await signInWithEmailAndPassword(
-                auth,
-                formData.email,
-                formData.password
-            );
-            console.log('Firebase Login Successful:', userCredential);
-
-            const firebaseUser = userCredential.user;
-
-            // Fetch user role from MySQL
-            const response = await api.post('/getUser', { email: firebaseUser.email });
-            console.log('MySQL Response:', response.data);
-
-            const userDetails = response.data;
-
-            // Redirect based on role
-            if (userDetails.role === 'admin') {
-                navigate('/admin/jobs');
-            } else if (userDetails.role === 'candidate') {
-                navigate('/candidate/jobs');
+            const response = await axios.post('/api/auth/login', { email, password });
+            if (response.data.success) {
+                // Store token in local storage or state
+                localStorage.setItem('token', response.data.token);
+                history.push('/home');
             } else {
-                throw new Error('Role not recognized');
+                setError(response.data.message);
             }
-        } catch (err) {
-            console.error('Login error:', err);
-            setError(
-                err.response?.data?.message || 
-                err.message || 
-                'An error occurred. Please try again.'
-            );
+        } catch (error) {
+            setError('Network Error');
         }
     };
 
     return (
-        <div>
-            <h1>Login</h1>
+        <div className="login-container">
             <form onSubmit={handleSubmit}>
+                <h2>Login</h2>
                 <input
                     type="email"
-                    name="email"
                     placeholder="Email"
-                    value={formData.email}
-                    onChange={handleInputChange}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
                 />
                 <input
                     type="password"
-                    name="password"
                     placeholder="Password"
-                    value={formData.password}
-                    onChange={handleInputChange}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
                 />
-                {error && <p style={{ color: 'red' }}>{error}</p>}
                 <button type="submit">Login</button>
+                {error && <p className="error">{error}</p>}
             </form>
         </div>
     );

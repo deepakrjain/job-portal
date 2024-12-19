@@ -1,80 +1,56 @@
+// components/Register.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { auth, database } from '../utils/firebaseConfig'; // Updated import
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { ref, set } from 'firebase/database';
+import axios from 'axios';
 
 const Register = () => {
-    const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        password: '',
-        role: 'candidate', // Default role
-    });
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const navigate = useNavigate();
-
-    const handleInputChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
+    const history = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
         try {
-            const userCredential = await createUserWithEmailAndPassword(
-                auth,
-                formData.email,
-                formData.password
-            );
-
-            // Save additional user info in the database
-            const user = userCredential.user;
-            await set(ref(database, `users/${user.uid}`), {
-                name: formData.name,
-                email: formData.email,
-                role: formData.role,
-            });
-
-            alert('Registration successful!');
-            navigate('/login');
-        } catch (err) {
-            console.error('Error during registration:', err);
-            setError(err.message || 'An error occurred. Please try again.');
+            const response = await axios.post('/api/auth/register', { name, email, password });
+            if (response.data.success) {
+                history.push('/login');
+            } else {
+                setError(response.data.message);
+            }
+        } catch (error) {
+            setError('Network Error');
         }
     };
 
     return (
-        <div>
-            <h1>Register</h1>
+        <div className="register-container">
             <form onSubmit={handleSubmit}>
+                <h2>Register</h2>
                 <input
                     type="text"
-                    name="name"
                     placeholder="Name"
-                    value={formData.name}
-                    onChange={handleInputChange}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
                 />
                 <input
                     type="email"
-                    name="email"
                     placeholder="Email"
-                    value={formData.email}
-                    onChange={handleInputChange}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
                 />
                 <input
                     type="password"
-                    name="password"
                     placeholder="Password"
-                    value={formData.password}
-                    onChange={handleInputChange}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
                 />
-                <select name="role" value={formData.role} onChange={handleInputChange}>
-                    <option value="candidate">Candidate</option>
-                    <option value="admin">Admin</option>
-                </select>
-                {error && <p style={{ color: 'red' }}>{error}</p>}
                 <button type="submit">Register</button>
+                {error && <p className="error">{error}</p>}
             </form>
         </div>
     );

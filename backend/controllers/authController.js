@@ -1,34 +1,32 @@
+// backend/controllers/authController.js
+const User = require('../models/userModel');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const User = require('../models/userModel');
 
-// Register User
-const registerUser = async (req, res) => {
-    const { name, email, password } = req.body;
+exports.registerUser = async (req, res) => {
     try {
+        const { username, email, password } = req.body;
         const hashedPassword = await bcrypt.hash(password, 10);
-        await User.create({ name, email, password: hashedPassword });
-        res.status(201).json({ success: true, message: 'User registered successfully' });
-    } catch (err) {
-        res.status(500).json({ success: false, message: 'Error registering user' });
+        const user = new User({ username, email, password: hashedPassword });
+        await user.save();
+        res.status(201).json({ message: 'User registered successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Error registering user: ' + error.message });
     }
 };
 
-// Login User
-const loginUser = async (req, res) => {
-    const { email, password } = req.body;
+exports.loginUser = async (req, res) => {
     try {
-        const user = await User.findOneByEmail(email);
-        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+        const { email, password } = req.body;
+        const user = await User.findOne({ email });
+        if (!user) return res.status(404).json({ message: 'User not found' });
 
         const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) return res.status(401).json({ success: false, message: 'Invalid credentials' });
+        if (!isPasswordValid) return res.status(401).json({ message: 'Invalid credentials' });
 
-        const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        res.status(200).json({ success: true, token });
-    } catch (err) {
-        res.status(500).json({ success: false, message: 'Error logging in' });
+        const token = jwt.sign({ id: user._id, role: user.role }, 'your_secret_key', { expiresIn: '1h' });
+        res.status(200).json({ token });
+    } catch (error) {
+        res.status(500).json({ error: 'Error logging in: ' + error.message });
     }
 };
-
-module.exports = { registerUser, loginUser };
