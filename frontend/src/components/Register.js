@@ -1,39 +1,80 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { registerWithFirebase } from '../services/api';
+import { auth, database } from '../utils/firebaseConfig'; // Updated import
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { ref, set } from 'firebase/database';
 
 const Register = () => {
-    const [formData, setFormData] = useState({ name: '', email: '', password: '', role: '' });
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        password: '',
+        role: 'candidate', // Default role
+    });
+    const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    const handleChange = (e) => {
+    const handleInputChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
         try {
-            await registerWithFirebase(formData.email, formData.password, formData.role);
+            const userCredential = await createUserWithEmailAndPassword(
+                auth,
+                formData.email,
+                formData.password
+            );
+
+            // Save additional user info in the database
+            const user = userCredential.user;
+            await set(ref(database, `users/${user.uid}`), {
+                name: formData.name,
+                email: formData.email,
+                role: formData.role,
+            });
+
             alert('Registration successful!');
             navigate('/login');
-        } catch (error) {
-            alert('Error: ' + error.message);
+        } catch (err) {
+            console.error('Error during registration:', err);
+            setError(err.message || 'An error occurred. Please try again.');
         }
     };
 
     return (
-        <div className="container mt-5">
-            <h2>Register</h2>
+        <div>
+            <h1>Register</h1>
             <form onSubmit={handleSubmit}>
-                <input type="text" name="name" placeholder="Name" onChange={handleChange} className="form-control mb-3" />
-                <input type="email" name="email" placeholder="Email" onChange={handleChange} className="form-control mb-3" />
-                <input type="password" name="password" placeholder="Password" onChange={handleChange} className="form-control mb-3" />
-                <select name="role" onChange={handleChange} className="form-control mb-3">
-                    <option value="">Select Role</option>
-                    <option value="admin">Admin</option>
+                <input
+                    type="text"
+                    name="name"
+                    placeholder="Name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                />
+                <input
+                    type="email"
+                    name="email"
+                    placeholder="Email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                />
+                <input
+                    type="password"
+                    name="password"
+                    placeholder="Password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                />
+                <select name="role" value={formData.role} onChange={handleInputChange}>
                     <option value="candidate">Candidate</option>
+                    <option value="admin">Admin</option>
                 </select>
-                <button type="submit" className="btn btn-primary">Register</button>
+                {error && <p style={{ color: 'red' }}>{error}</p>}
+                <button type="submit">Register</button>
             </form>
         </div>
     );

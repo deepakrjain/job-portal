@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const userRoutes = require('./routes/userRoutes'); // Import user routes
 require('dotenv').config();
 
 const db = require('./config/db');
@@ -14,6 +15,12 @@ app.use(express.json());
 app.use('/api/admin', adminRoutes);
 app.use('/api/candidate', candidateRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/users', userRoutes);
+
+// Catch-all route to handle the root URL
+app.get('/', (req, res) => {
+    res.send('Welcome to Job Portal');
+  });  
 
 db.connect((err) => {
     if (err) console.error('Database connection failed:', err);

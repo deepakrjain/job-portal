@@ -1,30 +1,38 @@
-import React, { useState, useEffect } from 'react';
-import axios from '../../utils/api';
-import JobCard from './JobCard';
+import React, { useEffect, useState } from 'react';
+import api from '../../utils/api'; // Adjust path to reach utils folder
 
 const CandidateJobs = () => {
-    const [jobs, setJobs] = useState([]);
+    const [appliedJobs, setAppliedJobs] = useState([]);
+    const [error, setError] = useState('');
 
     useEffect(() => {
-        const fetchJobs = async () => {
+        const fetchAppliedJobs = async () => {
             try {
-                const response = await axios.get('/api/candidate/jobs');
-                setJobs(response.data);
-            } catch (error) {
-                console.error('Failed to fetch jobs', error);
+                const email = localStorage.getItem('email'); // Store email on login
+                const response = await api.post('/getAppliedJobs', { email });
+                setAppliedJobs(response.data);
+            } catch (err) {
+                console.error(err);
+                setError('Error fetching applied jobs.');
             }
         };
-        fetchJobs();
+
+        fetchAppliedJobs();
     }, []);
 
     return (
         <div>
-            <h1>Available Jobs</h1>
-            {jobs.length ? (
-                jobs.map((job) => <JobCard key={job.id} job={job} />)
-            ) : (
-                <p>No jobs available</p>
-            )}
+            <h1>Applied Jobs</h1>
+            {error && <p style={{ color: 'red' }}>{error}</p>}
+            <ul>
+                {appliedJobs.map((job) => (
+                    <li key={job.id}>
+                        <h3>{job.title}</h3>
+                        <p>{job.description}</p>
+                        <p>Location: {job.location}</p>
+                    </li>
+                ))}
+            </ul>
         </div>
     );
 };

@@ -1,7 +1,8 @@
 const express = require('express');
-const { processChat } = require('../controllers/chatController');
 const router = express.Router();
+const chatController = require('../controllers/chatController'); // Ensure this path is correct
 
-router.post('/', processChat);
+router.post('/getMessages', chatController.getMessages);
+router.post('/postMessage', chatController.postMessage);
 
 module.exports = router;
