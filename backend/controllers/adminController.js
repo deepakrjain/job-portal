@@ -1,20 +1,33 @@
+// backend/controllers/adminController.js
+
 const Job = require('../models/jobModel');
 
-// Add a job
-const addJob = (req, res) => {
-    const jobData = req.body;
-    Job.create(jobData, (err, results) => {
-        if (err) return res.status(500).json({ error: 'Failed to add job' });
-        res.status(201).json({ message: 'Job added successfully' });
-    });
+exports.addJob = async (req, res) => {
+    try {
+        const { title, description, location, salary, requirements } = req.body;
+        const newJob = new Job({ title, description, location, salary, requirements });
+        await newJob.save();
+        res.status(201).send('Job added successfully');
+    } catch (error) {
+        res.status(500).send('Error adding job: ' + error.message);
+    }
 };
 
-// List all jobs
-const listJobs = (req, res) => {
-    Job.getAll((err, results) => {
-        if (err) return res.status(500).json({ error: 'Failed to fetch jobs' });
-        res.status(200).json(results);
-    });
+exports.getAllJobs = async (req, res) => {
+    try {
+        const jobs = await Job.find();
+        res.status(200).json(jobs);
+    } catch (error) {
+        res.status(500).send('Error fetching jobs: ' + error.message);
+    }
 };
 
-module.exports = { addJob, listJobs };
+exports.getJobApplications = async (req, res) => {
+    try {
+        // Assuming there's a JobApplication model to store applications
+        const applications = await JobApplication.find();
+        res.status(200).json(applications);
+    } catch (error) {
+        res.status(500).send('Error fetching job applications: ' + error.message);
+    }
+};
